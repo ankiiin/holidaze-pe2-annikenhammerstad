@@ -15,7 +15,7 @@ import NotFound from "./pages/NotFound";
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen bg-beige font-sans text-teal">
+    <div className="flex flex-col min-h-screen bg-[#FAFAFA] font-sans text-teal">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
