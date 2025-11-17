@@ -2,35 +2,45 @@ import { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
 function Navbar() {
-  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [role, setRole] = useState<"customer" | "manager" | null>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    setIsLoggedIn(!!token);
+    function updateAuthState() {
+      const token = localStorage.getItem("token");
+      const storedRole = localStorage.getItem("role") as
+        | "customer"
+        | "manager"
+        | null;
 
-    window.addEventListener("storage", syncLoginStatus);
-    return () => window.removeEventListener("storage", syncLoginStatus);
+      setIsLoggedIn(!!token);
+      setRole(storedRole);
+    }
+
+    updateAuthState();
+
+    window.addEventListener("storage", updateAuthState);
+
+    return () => window.removeEventListener("storage", updateAuthState);
   }, []);
 
-  function syncLoginStatus() {
-    const token = localStorage.getItem("accessToken");
-    setIsLoggedIn(!!token);
-  }
-
   function handleLogout() {
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("role");
+
     setIsLoggedIn(false);
-    window.dispatchEvent(new Event("storage"));
+    setRole(null);
+
     navigate("/");
   }
 
   return (
     <nav className="bg-white shadow-sm fixed top-0 left-0 w-full z-50">
       <div className="container mx-auto flex items-center justify-between py-4 px-6">
-        
         <Link to="/" className="flex items-center space-x-2">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-coral to-orange-400 flex items-center justify-center">
             <span className="text-white font-bold text-lg">H</span>
@@ -63,7 +73,8 @@ function Navbar() {
             Explore
           </NavLink>
 
-          {!isLoggedIn ? (
+          {/* Logged-out view */}
+          {!isLoggedIn && (
             <>
               <NavLink
                 to="/login"
@@ -83,25 +94,26 @@ function Navbar() {
                 Sign Up
               </Link>
             </>
-          ) : (
+          )}
+
+          {isLoggedIn && (
             <>
               <NavLink
-                to="/profile"
+                to={role === "manager" ? "/manager" : "/profile"}
                 className={({ isActive }) =>
                   `text-teal font-medium hover:text-coral transition ${
-                    isActive ? "text-coral font-semibold" : ""
+                    isActive ? "text-coral" : ""
                   }`
                 }
               >
                 Profile
               </NavLink>
 
-              {/* 🔥 Coral Log Out button */}
               <button
                 onClick={handleLogout}
-                className="bg-coral text-white font-semibold py-2 px-5 rounded-lg hover:bg-orange-500 transition"
+                className="bg-coral text-white text-sm font-semibold py-2 px-5 rounded-lg hover:bg-orange-500 transition"
               >
-                Log Out
+                LOG OUT
               </button>
             </>
           )}
@@ -120,7 +132,6 @@ function Navbar() {
       {menuOpen && (
         <div className="md:hidden bg-white shadow-md">
           <div className="flex flex-col items-center space-y-4 py-4">
-
             <NavLink
               to="/"
               onClick={() => setMenuOpen(false)}
@@ -137,7 +148,7 @@ function Navbar() {
               Explore
             </NavLink>
 
-            {!isLoggedIn ? (
+            {!isLoggedIn && (
               <>
                 <NavLink
                   to="/login"
@@ -155,10 +166,12 @@ function Navbar() {
                   Sign Up
                 </Link>
               </>
-            ) : (
+            )}
+
+            {isLoggedIn && (
               <>
                 <NavLink
-                  to="/profile"
+                  to={role === "manager" ? "/manager" : "/profile"}
                   onClick={() => setMenuOpen(false)}
                   className="text-teal font-medium hover:text-coral transition"
                 >
@@ -172,7 +185,7 @@ function Navbar() {
                   }}
                   className="bg-coral text-white font-semibold py-2 px-5 rounded-lg hover:bg-orange-500 transition"
                 >
-                  Log Out
+                  LOG OUT
                 </button>
               </>
             )}
