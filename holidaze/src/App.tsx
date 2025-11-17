@@ -17,8 +17,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen bg-[#FAFAFA] font-sans text-teal">
       <Navbar />
-      <main className="flex-grow w-full max-w-[1400px] mx-auto px-4 py-8 overflow-x-hidden">
-        <Routes>
+      <main className="pt-24 flex-grow w-full max-w-[1400px] mx-auto px-4 py-8 overflow-x-hidden">        <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/venues" element={<VenuesList />} />
           <Route path="/venue/:id" element={<VenueDetail />} />
