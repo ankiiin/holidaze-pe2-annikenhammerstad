@@ -1,4 +1,3 @@
-// src/pages/VenuesList.tsx
 import { useEffect, useState } from "react";
 import type { Venue } from "../types/venue";
 
@@ -15,7 +14,6 @@ export default function VenuesList() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Hent venues ved første load
   useEffect(() => {
     fetchVenues();
   }, []);
@@ -50,7 +48,6 @@ export default function VenuesList() {
     fetchVenues(searchTerm.trim() || undefined);
   }
 
-  // Filter + sortering i minnet
   const guestsNumber = Number(guests) || 1;
 
   const filtered = venues.filter((venue) =>
@@ -67,14 +64,12 @@ export default function VenuesList() {
         return (b.rating || 0) - (a.rating || 0);
       case "popular":
       default:
-        // foreløpig: sorter på rating som "most popular"
         return (b.rating || 0) - (a.rating || 0);
     }
   });
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8">
-      {/* Filterbar */}
       <form
         onSubmit={handleSearch}
         className="mt-4 md:mt-8 flex flex-col md:flex-row gap-4 md:gap-3 items-stretch md:items-center"
@@ -132,7 +127,6 @@ export default function VenuesList() {
         </button>
       </form>
 
-      {/* Sorteringstekst */}
       <div className="flex justify-end text-[11px] text-gray-500 gap-2 md:gap-3">
         <span>Sort by</span>
         <button
@@ -171,20 +165,18 @@ export default function VenuesList() {
         </button>
       </div>
 
-      {/* Status */}
       {loading && <p className="text-center text-sm text-gray-500">Loading venues…</p>}
       {errorMsg && (
         <p className="text-center text-sm text-red-600">{errorMsg}</p>
       )}
 
-      {/* Grid med venues */}
       {!loading && !errorMsg && (
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {sorted.map((venue) => {
             const imageUrl =
               venue.media && venue.media.length > 0
                 ? venue.media[0].url
-                : "/placeholder.png"; // evt din egen placeholder i /public
+                : "/placeholder.png";
 
             const location =
               venue.location?.city && venue.location?.country
