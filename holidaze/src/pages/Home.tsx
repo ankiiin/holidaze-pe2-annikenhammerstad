@@ -82,7 +82,7 @@ export default function Home() {
                   ${venue.price} per night
                 </p>
                 <Link
-                  to={`/venues/${venue.id}`}
+                  to={`/venue/${venue.id}`}
                   className="bg-azure text-white px-4 py-2 rounded-lg hover:bg-teal transition text-sm"
                 >
                   Book now

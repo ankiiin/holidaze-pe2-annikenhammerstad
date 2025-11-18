@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import type { Venue } from "../types/venue";
+import DatePicker from "react-datepicker";
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -8,7 +10,9 @@ type SortOption = "popular" | "priceLow" | "priceHigh" | "rating";
 export default function VenuesList() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [date, setDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [guests, setGuests] = useState("2");
   const [sortOption, setSortOption] = useState<SortOption>("popular");
   const [loading, setLoading] = useState(false);
@@ -88,17 +92,38 @@ export default function VenuesList() {
           />
         </div>
 
-        <div className="w-full md:w-40">
-          <label className="sr-only" htmlFor="date">
-            Date
-          </label>
-          <input
-            id="date"
-            type="date"
-            className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-coral/40"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+        <div className="w-full md:w-56 relative">
+          <label className="sr-only">Dates</label>
+
+          <div
+            onClick={() => setShowCalendar(!showCalendar)}
+            className="bg-white border border-gray-300 rounded-md py-2 px-3 text-sm cursor-pointer focus-within:ring-2 focus-within:ring-coral/40"
+          >
+            {startDate && endDate
+              ? `${startDate.toLocaleDateString("no-NO")} → ${endDate.toLocaleDateString("no-NO")}`
+              : "Select dates"}
+          </div>
+
+          {showCalendar && (
+            <div className="absolute z-50 mt-2 shadow-lg rounded-xl overflow-hidden bg-white">
+              <DatePicker
+                selected={startDate}
+                onChange={(dates) => {
+                  const [start, end] = dates;
+                  setStartDate(start);
+                  setEndDate(end);
+
+                  if (start && end) {
+                    setTimeout(() => setShowCalendar(false), 300);
+                  }
+                }}
+                startDate={startDate}
+                endDate={endDate}
+                selectsRange
+                inline
+              />
+            </div>
+          )}
         </div>
 
         <div className="w-full md:w-40">
@@ -121,7 +146,7 @@ export default function VenuesList() {
 
         <button
           type="submit"
-          className="w-full md:w-28 bg-teal text-white text-sm font-semibold py-2 rounded-md hover:bg-teal/90 transition"
+          className="w-full md:w-28 bg-[#2B7A78] text-white text-sm font-semibold py-2 rounded-md hover:bg-teal/90 transition"
         >
           Search
         </button>
@@ -165,7 +190,9 @@ export default function VenuesList() {
         </button>
       </div>
 
-      {loading && <p className="text-center text-sm text-gray-500">Loading venues…</p>}
+      {loading && (
+        <p className="text-center text-sm text-gray-500">Loading venues…</p>
+      )}
       {errorMsg && (
         <p className="text-center text-sm text-red-600">{errorMsg}</p>
       )}
@@ -214,15 +241,16 @@ export default function VenuesList() {
                         ${venue.price} per night
                       </p>
                       {ratingStars && (
-                        <p className="text-xs text-yellow-500">
-                          {ratingStars}
-                        </p>
+                        <p className="text-xs text-yellow-500">{ratingStars}</p>
                       )}
                     </div>
 
-                    <button className="bg-teal text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-teal/90 transition">
+                    <Link
+                      to={`/venue/${venue.id}`}
+                      className="inline-block bg-[#2B7A78] text-white text-sm font-semibold py-2 px-5 rounded-md hover:bg-[#226964] transition"
+                    >
                       Book now
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </article>
