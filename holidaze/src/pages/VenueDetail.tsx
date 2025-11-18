@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -66,8 +66,7 @@ export default function VenueDetail() {
   const token = localStorage.getItem("token");
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const role =
-    (localStorage.getItem("role") as "customer" | "manager" | null) ?? null;
+  const role = (localStorage.getItem("role") as "customer" | "manager" | null) ?? null;
 
   const isOwnerManager =
     role === "manager" && user && venue && user.name === venue.owner.name;
@@ -76,45 +75,82 @@ export default function VenueDetail() {
   const [endDate, setEndDate] = useState<Date | null>(null);
 
   const [searchValue, setSearchValue] = useState("");
+  const [searchResults, setSearchResults] = useState<Venue[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     if (!id) return;
-
     async function fetchVenue() {
       try {
         setLoading(true);
-        setError(null);
-
         const res = await fetch(
           `${API_BASE}/holidaze/venues/${id}?_owner=true&_bookings=true&_reviews=true`
         );
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch venue (${res.status})`);
-        }
-
+        if (!res.ok) throw new Error();
         const json = await res.json();
         setVenue(json.data as Venue);
-      } catch (err: any) {
-        console.error("Error fetching venue:", err);
-        setError("Could not load this venue. Please try again.");
+      } catch {
+        setError("Could not load this venue.");
       } finally {
         setLoading(false);
       }
     }
-
     fetchVenue();
   }, [id]);
 
-  function handleTopSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const query = searchValue.trim();
-    if (!query) return;
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    navigate("/venues", { state: { search: query } });
+  async function handleSearchInput(value: string) {
+    setSearchValue(value);
+    if (!value.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+    const res = await fetch(
+      `${API_BASE}/holidaze/venues/search?q=${encodeURIComponent(value)}`
+    );
+    if (!res.ok) return;
+
+    const json = await res.json();
+    setSearchResults(json.data || []);
+    setShowDropdown(true);
+  }
+
+  function openModal(index: number) {
+    setActiveImageIndex(index);
+    setIsModalOpen(true);
+  }
+
+  function closeModal() {
+    setIsModalOpen(false);
+  }
+
+  function showPrev() {
+    if (!venue?.media?.length) return;
+    setActiveImageIndex((prev) =>
+      prev === 0 ? venue.media.length - 1 : prev - 1
+    );
+  }
+
+  function showNext() {
+    if (!venue?.media?.length) return;
+    setActiveImageIndex((prev) =>
+      prev === venue.media.length - 1 ? 0 : prev + 1
+    );
   }
 
   if (loading) {
@@ -129,98 +165,49 @@ export default function VenueDetail() {
     );
   }
 
-  if (error) {
-    return (
-      <section className="text-center py-16">
-        <h1 className="text-2xl font-serif font-bold mb-4">
-          Something went wrong
-        </h1>
-        <p className="text-gray-600 mb-6">{error}</p>
-        <button
-          onClick={() => navigate(-1)}
-          className="px-4 py-2 bg-azure text-white rounded-lg hover:bg-[#226964] transition"
-        >
-          Go back
-        </button>
-      </section>
-    );
-  }
-
-  if (!venue) {
+  if (error || !venue) {
     return (
       <section className="text-center py-16">
         <h1 className="text-2xl font-serif font-bold mb-4">Venue not found</h1>
-        <Link to="/venues" className="text-coral font-semibold underline">
+        <Link to="/venues" className="text-coral underline font-semibold">
           Back to Explore
         </Link>
       </section>
     );
   }
 
-  const media: VenueMediaItem[] =
-    venue.media && venue.media.length > 0
-      ? venue.media
-      : [{ url: "/images/placeholder.jpg", alt: venue.name }];
+  const media = venue.media?.length
+    ? venue.media
+    : [{ url: "/images/placeholder.jpg", alt: venue.name }];
 
   const mainImage = media[0];
   const secondaryImages = media.slice(1, 3);
-  const totalImages = media.length;
-
-  function openModal(index: number) {
-    setActiveImageIndex(index);
-    setIsModalOpen(true);
-  }
-
-  function closeModal() {
-    setIsModalOpen(false);
-  }
-
-  function showPrev() {
-    setActiveImageIndex((prev) =>
-      prev === 0 ? totalImages - 1 : prev - 1
-    );
-  }
-
-  function showNext() {
-    setActiveImageIndex((prev) =>
-      prev === totalImages - 1 ? 0 : prev + 1
-    );
-  }
 
   return (
     <>
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
           onClick={closeModal}
         >
-          <button
-            onClick={closeModal}
-            className="absolute top-4 right-4 text-white text-2xl font-bold"
-            aria-label="Close image viewer"
-          >
-            ×
-          </button>
-
-          {totalImages > 1 && (
+          {media.length > 1 && (
             <>
               <button
+                className="absolute left-6 text-white text-4xl font-bold"
                 onClick={(e) => {
                   e.stopPropagation();
                   showPrev();
                 }}
-                className="absolute left-4 md:left-8 text-white text-3xl md:text-4xl px-2"
-                aria-label="Previous image"
               >
                 ‹
               </button>
+
               <button
+                className="absolute right-6 text-white text-4xl font-bold"
                 onClick={(e) => {
                   e.stopPropagation();
                   showNext();
                 }}
-                className="absolute right-4 md:right-8 text-white text-3xl md:text-4xl px-2"
-                aria-label="Next image"
               >
                 ›
               </button>
@@ -229,136 +216,137 @@ export default function VenueDetail() {
 
           <img
             src={media[activeImageIndex].url}
-            alt={
-              media[activeImageIndex].alt || `${venue.name} image ${activeImageIndex + 1}`
-            }
-            className="max-h-[80vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
+            alt={venue.name}
+            className="max-h-[85vh] max-w-[90vw] object-contain rounded-xl shadow-xl"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}
 
       <section className="space-y-10">
-        <form
-          onSubmit={handleTopSearch}
-          className="mb-4 flex justify-start"
-          aria-label="Search destinations"
-        >
-          <div className="w-full max-w-sm">
-            <label htmlFor="venue-detail-search" className="sr-only">
-              Search destinations
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                🔍
-              </span>
-              <input
-                id="venue-detail-search"
-                type="text"
-                placeholder="Search destinations..."
-                className="w-full border border-gray-300 rounded-md py-2 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-coral/40"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-              />
+
+        <div className="relative w-full max-w-sm" ref={dropdownRef}>
+          <input
+            type="text"
+            placeholder="Search destinations..."
+            value={searchValue}
+            onChange={(e) => handleSearchInput(e.target.value)}
+            className="w-full border border-gray-300 rounded-md py-2 pl-8 pr-3 text-sm focus:ring-2 focus:ring-coral/40"
+          />
+          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">
+            🔍
+          </span>
+
+          {showDropdown && searchResults.length > 0 && (
+            <div className="absolute mt-1 w-full bg-white border shadow-lg rounded-lg z-40">
+              {searchResults.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(`/venue/${item.id}`)}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 text-left"
+                >
+                  <img
+                    src={item.media?.[0]?.url || "/images/placeholder.jpg"}
+                    alt={item.name}
+                    className="w-12 h-12 object-cover rounded-md"
+                  />
+                  <div>
+                    <p className="font-semibold text-sm">{item.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {item.location?.city || "Unknown"},{" "}
+                      {item.location?.country || ""}
+                    </p>
+                  </div>
+                </button>
+              ))}
             </div>
+          )}
+        </div>
+
+        <div className="md:hidden mb-4 relative">
+          <img
+            src={media[activeImageIndex].url}
+            alt={venue.name}
+            className="w-full h-64 object-cover rounded-xl"
+            onClick={() => openModal(activeImageIndex)}
+          />
+
+          {media.length > 1 && (
+            <>
+              <button
+                onClick={showPrev}
+                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center"
+              >
+                ‹
+              </button>
+
+              <button
+                onClick={showNext}
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center"
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="hidden md:grid gap-4 md:grid-cols-[2fr,1fr]">
+          <div
+            className="rounded-xl overflow-hidden cursor-pointer"
+            onClick={() => openModal(0)}
+          >
+            <img
+              src={mainImage.url}
+              alt={mainImage.alt || venue.name}
+              className="w-full h-80 object-cover"
+            />
           </div>
-        </form>
+
+          <div className="grid grid-rows-2 gap-4">
+            {secondaryImages.map((img, index) => (
+              <div
+                key={index + 1}
+                className="rounded-xl overflow-hidden cursor-pointer"
+                onClick={() => openModal(index + 1)}
+              >
+                <img
+                  src={img.url}
+                  alt={img.alt || `${venue.name} image ${index + 2}`}
+                  className="w-full h-36 object-cover"
+                />
+              </div>
+            ))}
+
+            {secondaryImages.length === 0 && (
+              <div className="rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+                More photos coming soon
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="grid gap-8 md:grid-cols-[2fr,1.3fr]">
           <div>
-            <div className="md:hidden mb-4">
-              <div className="relative rounded-xl overflow-hidden">
-                <img
-                  src={media[activeImageIndex].url}
-                  alt={
-                    media[activeImageIndex].alt ||
-                    `${venue.name} image ${activeImageIndex + 1}`
-                  }
-                  className="w-full h-64 object-cover"
-                  onClick={() => openModal(activeImageIndex)}
-                />
-                {totalImages > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={showPrev}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg"
-                      aria-label="Previous image"
-                    >
-                      ‹
-                    </button>
-                    <button
-                      type="button"
-                      onClick={showNext}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg"
-                      aria-label="Next image"
-                    >
-                      ›
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+            <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2">
+              {venue.name}
+            </h1>
 
-            <div className="hidden md:grid gap-4 md:grid-cols-[2fr,1fr]">
-              <div
-                className="rounded-xl overflow-hidden cursor-pointer"
-                onClick={() => openModal(0)}
-              >
-                <img
-                  src={mainImage.url}
-                  alt={mainImage.alt || venue.name}
-                  className="w-full h-80 object-cover"
-                />
-              </div>
+            <p className="text-gray-600 mb-2 flex items-center gap-1">
+              <span className="text-lg">📍</span>
+              {venue.location?.city || "Unknown location"},{" "}
+              {venue.location?.country || ""}
+            </p>
 
-              <div className="grid grid-rows-2 gap-4">
-                {secondaryImages.map((img, index) => (
-                  <div
-                    key={index + 1}
-                    className="rounded-xl overflow-hidden cursor-pointer"
-                    onClick={() => openModal(index + 1)}
-                  >
-                    <img
-                      src={img.url}
-                      alt={img.alt || `${venue.name} image ${index + 2}`}
-                      className="w-full h-36 object-cover"
-                    />
-                  </div>
-                ))}
-
-                {secondaryImages.length === 0 && (
-                  <div className="rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-                    More photos coming soon
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2">
-                {venue.name}
-              </h1>
-
-              <p className="text-gray-600 mb-2 flex items-center gap-1">
-                <span className="text-lg">📍</span>
-                {venue.location?.city || "Unknown location"},{" "}
-                {venue.location?.country || ""}
+            <div className="flex items-center gap-4 mb-4 flex-wrap">
+              <p className="text-lg font-semibold">${venue.price} per night</p>
+              <p className="text-yellow-500 text-sm">
+                {"⭐".repeat(Math.round(venue.rating || 0)) ||
+                  "No rating yet"}
               </p>
-
-              <div className="flex items-center gap-4 mb-4 flex-wrap">
-                <p className="text-lg font-semibold">
-                  ${venue.price} per night
-                </p>
-                <p className="text-yellow-500 text-sm">
-                  {"⭐".repeat(Math.round(venue.rating || 0)) ||
-                    "No rating yet"}
-                </p>
-                <p className="text-gray-500 text-sm">
-                  Max {venue.maxGuests}{" "}
-                  {venue.maxGuests === 1 ? "guest" : "guests"}
-                </p>
-              </div>
+              <p className="text-gray-500 text-sm">
+                Max {venue.maxGuests}{" "}
+                {venue.maxGuests === 1 ? "guest" : "guests"}
+              </p>
             </div>
           </div>
 
@@ -419,7 +407,7 @@ export default function VenueDetail() {
                 You must{" "}
                 <Link
                   to="/login"
-                  className="text-coral font-semibold underline underline-offset-2"
+                  className="text-coral underline font-semibold"
                 >
                   log in
                 </Link>{" "}
@@ -462,7 +450,6 @@ export default function VenueDetail() {
             <div className="grid grid-cols-2 text-sm text-gray-700 gap-y-2">
               <p>• Check in 15:00</p>
               <p>• Check out 11:00</p>
-              <p>• No smoking</p>
             </div>
           </section>
 
