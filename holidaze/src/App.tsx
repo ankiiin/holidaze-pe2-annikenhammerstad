@@ -7,6 +7,7 @@ import VenueDetail from "./pages/VenueDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import CreateVenue from "./pages/CreateVenue";
 import EditVenue from "./pages/EditVenue";
@@ -24,6 +25,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/dashboard" element={<ManagerDashboard />} />
           <Route path="/create" element={<CreateVenue />} />
           <Route path="/edit/:id" element={<EditVenue />} />
