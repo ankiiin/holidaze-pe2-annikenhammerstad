@@ -26,7 +26,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/dashboard" element={<ManagerDashboard />} />
+          <Route path="/manager" element={<ManagerDashboard />} />
           <Route path="/create" element={<CreateVenue />} />
           <Route path="/edit/:id" element={<EditVenue />} />
           <Route path="/booking-confirmation" element={<BookingConfirmation />} />
