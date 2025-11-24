@@ -37,6 +37,7 @@ export default function EditProfile() {
             url: avatarUrl,
             alt: avatarAlt,
           },
+          venueManager: true,
         }),
       });
 
