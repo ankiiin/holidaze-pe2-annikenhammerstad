@@ -1,4 +1,3 @@
-// src/pages/BookingConfirmation.tsx
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -8,7 +7,7 @@ export default function BookingConfirmation() {
 
   const booking = location.state;
 
-  const role = localStorage.getItem("role"); // customer | manager
+  const role = localStorage.getItem("role"); 
 
   useEffect(() => {
     if (!booking) {
