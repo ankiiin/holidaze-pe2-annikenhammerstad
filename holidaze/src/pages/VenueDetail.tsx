@@ -4,6 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 const API_BASE = "https://v2.api.noroff.dev";
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 interface VenueMeta {
   wifi?: boolean;
@@ -32,6 +33,13 @@ interface VenueOwner {
   };
 }
 
+interface Booking {
+  id: string;
+  dateFrom: string;
+  dateTo: string;
+  guests: number;
+}
+
 interface Review {
   id: string;
   rating: number;
@@ -52,6 +60,7 @@ interface Venue {
   meta?: VenueMeta;
   location?: VenueLocation;
   owner: VenueOwner;
+  bookings: Booking[];
   reviews?: Review[];
 }
 
@@ -63,35 +72,45 @@ export default function VenueDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const token = localStorage.getItem("token");
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const role = (localStorage.getItem("role") as "customer" | "manager" | null) ?? null;
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
 
   const isOwnerManager =
-    role === "manager" && user && venue && user.name === venue.owner.name;
+    role === "manager" && user && venue && venue.owner?.name === user.name;
 
+  // Booking form state
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [guests, setGuests] = useState(1);
 
+  // Search box
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<Venue[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Image modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     if (!id) return;
-    async function fetchVenue() {
+
+    async function loadVenue() {
       try {
         setLoading(true);
+
         const res = await fetch(
-          `${API_BASE}/holidaze/venues/${id}?_owner=true&_bookings=true&_reviews=true`
+          `${API_BASE}/holidaze/venues/${id}?_owner=true&_bookings=true&_reviews=true`,
+          {
+            headers: { "X-Noroff-API-Key": API_KEY },
+          }
         );
-        if (!res.ok) throw new Error();
+
+        if (!res.ok) throw new Error("Failed to load venue");
+
         const json = await res.json();
         setVenue(json.data as Venue);
       } catch {
@@ -100,29 +119,48 @@ export default function VenueDetail() {
         setLoading(false);
       }
     }
-    fetchVenue();
+
+    loadVenue();
   }, [id]);
 
+  // Disable booked dates in datepicker
+  const bookedRanges =
+    venue?.bookings?.map((b) => ({
+      start: new Date(b.dateFrom),
+      end: new Date(b.dateTo),
+    })) || [];
+
+  function isDateBooked(date: Date) {
+    return bookedRanges.some(
+      (range) => date >= range.start && date <= range.end
+    );
+  }
+
+  // SEARCH handling
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   async function handleSearchInput(value: string) {
     setSearchValue(value);
+
     if (!value.trim()) {
-      setSearchResults([]);
       setShowDropdown(false);
       return;
     }
+
     const res = await fetch(
-      `${API_BASE}/holidaze/venues/search?q=${encodeURIComponent(value)}`
+      `${API_BASE}/holidaze/venues/search?q=${encodeURIComponent(value)}`,
+      { headers: { "X-Noroff-API-Key": API_KEY } }
     );
+
     if (!res.ok) return;
 
     const json = await res.json();
@@ -130,8 +168,9 @@ export default function VenueDetail() {
     setShowDropdown(true);
   }
 
-  function openModal(index: number) {
-    setActiveImageIndex(index);
+  // IMAGE MODAL
+  function openModal(idx: number) {
+    setActiveImageIndex(idx);
     setIsModalOpen(true);
   }
 
@@ -140,27 +179,69 @@ export default function VenueDetail() {
   }
 
   function showPrev() {
-    if (!venue?.media?.length) return;
+    if (!venue?.media.length) return;
     setActiveImageIndex((prev) =>
       prev === 0 ? venue.media.length - 1 : prev - 1
     );
   }
 
   function showNext() {
-    if (!venue?.media?.length) return;
+    if (!venue?.media.length) return;
     setActiveImageIndex((prev) =>
       prev === venue.media.length - 1 ? 0 : prev + 1
     );
   }
 
+  // *** BOOKING REQUEST ***
+  async function submitBooking() {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    if (!startDate || !endDate) {
+      alert("Please select valid dates.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/holidaze/bookings`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-Noroff-API-Key": API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          dateFrom: startDate,
+          dateTo: endDate,
+          guests,
+          venueId: id,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to create booking.");
+
+      const json = await res.json();
+
+      navigate("/booking-confirmation", {
+        state: {
+          bookingId: json.data.id,
+          venueId: id,
+          startDate,
+          endDate,
+        },
+      });
+    } catch (err) {
+      alert("Could not complete booking. Please try again.");
+    }
+  }
+
+  // LOADING / ERROR
   if (loading) {
     return (
       <section className="animate-pulse space-y-6">
-        <div className="h-64 bg-gray-200 rounded-xl" />
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="h-40 bg-gray-200 rounded-xl md:col-span-2" />
-          <div className="h-40 bg-gray-200 rounded-xl" />
-        </div>
+        <div className="h-64 bg-gray-200 rounded-xl"></div>
       </section>
     );
   }
@@ -180,20 +261,19 @@ export default function VenueDetail() {
     ? venue.media
     : [{ url: "/images/placeholder.jpg", alt: venue.name }];
 
-  const mainImage = media[0];
-  const secondaryImages = media.slice(1, 3);
-
+  // RENDER
   return (
     <>
+      {/* IMAGE MODAL */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black/80 z-40 flex items-center justify-center"
           onClick={closeModal}
         >
           {media.length > 1 && (
             <>
               <button
-                className="absolute left-6 text-white text-4xl font-bold"
+                className="absolute left-6 text-white text-4xl"
                 onClick={(e) => {
                   e.stopPropagation();
                   showPrev();
@@ -201,9 +281,8 @@ export default function VenueDetail() {
               >
                 ‹
               </button>
-
               <button
-                className="absolute right-6 text-white text-4xl font-bold"
+                className="absolute right-6 text-white text-4xl"
                 onClick={(e) => {
                   e.stopPropagation();
                   showNext();
@@ -223,22 +302,23 @@ export default function VenueDetail() {
         </div>
       )}
 
+      {/* MAIN CONTENT */}
       <section className="space-y-10">
-
-        <div className="relative w-full max-w-sm" ref={dropdownRef}>
+        {/* SEARCH BAR */}
+        <div className="relative max-w-sm" ref={dropdownRef}>
           <input
             type="text"
             placeholder="Search destinations..."
             value={searchValue}
             onChange={(e) => handleSearchInput(e.target.value)}
-            className="w-full border border-gray-300 rounded-md py-2 pl-8 pr-3 text-sm focus:ring-2 focus:ring-coral/40"
+            className="w-full border border-gray-300 rounded-md py-2 pl-8 pr-3 text-sm"
           />
           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">
             🔍
           </span>
 
-          {showDropdown && searchResults.length > 0 && (
-            <div className="absolute mt-1 w-full bg-white border shadow-lg rounded-lg z-40">
+          {showDropdown && (
+            <div className="absolute mt-1 w-full bg-white border shadow-lg rounded-lg z-50">
               {searchResults.map((item) => (
                 <button
                   key={item.id}
@@ -263,47 +343,21 @@ export default function VenueDetail() {
           )}
         </div>
 
-        <div className="md:hidden mb-4 relative">
-          <img
-            src={media[activeImageIndex].url}
-            alt={venue.name}
-            className="w-full h-64 object-cover rounded-xl"
-            onClick={() => openModal(activeImageIndex)}
-          />
-
-          {media.length > 1 && (
-            <>
-              <button
-                onClick={showPrev}
-                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center"
-              >
-                ‹
-              </button>
-
-              <button
-                onClick={showNext}
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center"
-              >
-                ›
-              </button>
-            </>
-          )}
-        </div>
-
-        <div className="hidden md:grid gap-4 md:grid-cols-[2fr,1fr]">
+        {/* IMAGE SECTION */}
+        <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
           <div
             className="rounded-xl overflow-hidden cursor-pointer"
             onClick={() => openModal(0)}
           >
             <img
-              src={mainImage.url}
-              alt={mainImage.alt || venue.name}
+              src={media[0].url}
+              alt={media[0].alt || venue.name}
               className="w-full h-80 object-cover"
             />
           </div>
 
           <div className="grid grid-rows-2 gap-4">
-            {secondaryImages.map((img, index) => (
+            {media.slice(1, 3).map((img, index) => (
               <div
                 key={index + 1}
                 className="rounded-xl overflow-hidden cursor-pointer"
@@ -316,99 +370,106 @@ export default function VenueDetail() {
                 />
               </div>
             ))}
-
-            {secondaryImages.length === 0 && (
-              <div className="rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-                More photos coming soon
-              </div>
-            )}
           </div>
         </div>
 
+        {/* DETAILS */}
         <div className="grid gap-8 md:grid-cols-[2fr,1.3fr]">
           <div>
-            <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2">
+            <h1 className="text-3xl font-serif font-bold mb-3">
               {venue.name}
             </h1>
 
-            <p className="text-gray-600 mb-2 flex items-center gap-1">
-              <span className="text-lg">📍</span>
-              {venue.location?.city || "Unknown location"},{" "}
+            <p className="text-gray-600 mb-4">
+              📍 {venue.location?.city || "Unknown"},{" "}
               {venue.location?.country || ""}
             </p>
 
-            <div className="flex items-center gap-4 mb-4 flex-wrap">
-              <p className="text-lg font-semibold">${venue.price} per night</p>
-              <p className="text-yellow-500 text-sm">
-                {"⭐".repeat(Math.round(venue.rating || 0)) ||
-                  "No rating yet"}
-              </p>
-              <p className="text-gray-500 text-sm">
-                Max {venue.maxGuests}{" "}
-                {venue.maxGuests === 1 ? "guest" : "guests"}
-              </p>
-            </div>
+            <p className="text-lg font-semibold mb-2">
+              ${venue.price} per night
+            </p>
+
+            <p className="text-gray-500 text-sm mb-6">
+              Max {venue.maxGuests}{" "}
+              {venue.maxGuests === 1 ? "guest" : "guests"}
+            </p>
+
+            <h2 className="text-xl font-serif font-semibold mb-2">
+              About this place
+            </h2>
+            <p className="text-gray-700 leading-relaxed">
+              {venue.description || "No description provided."}
+            </p>
           </div>
 
+          {/* BOOKING SIDEBAR */}
           <aside className="border border-gray-200 rounded-xl p-6 shadow-sm bg-white h-fit">
-            <h2 className="text-xl font-serif font-semibold mb-4">Your stay</h2>
+            <h2 className="text-xl font-serif font-semibold mb-4">
+              Your stay
+            </h2>
 
+            {/* DATE PICKER */}
             <div className="space-y-3 mb-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">
-                  Dates
-                </label>
+              <label className="block text-xs font-semibold text-gray-500">
+                Dates
+              </label>
 
-                <DatePicker
-                  selected={startDate}
-                  onChange={(dates) => {
-                    const [start, end] = dates as [Date | null, Date | null];
-                    setStartDate(start);
-                    setEndDate(end);
-                  }}
-                  startDate={startDate}
-                  endDate={endDate}
-                  selectsRange
-                  minDate={new Date()}
-                  placeholderText="Select your stay dates"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-coral/40"
-                />
-              </div>
+              <DatePicker
+                selected={startDate}
+                onChange={(dates) => {
+                  const [start, end] = dates as [Date | null, Date | null];
+                  if (start && isDateBooked(start)) return;
+                  if (end && isDateBooked(end)) return;
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">
-                  Guests
-                </label>
-                <select className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-coral/40">
-                  {Array.from({ length: venue.maxGuests }, (_, i) => i + 1).map(
-                    (g) => (
-                      <option key={g} value={g}>
-                        {g} {g === 1 ? "guest" : "guests"}
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
+                  setStartDate(start);
+                  setEndDate(end);
+                }}
+                startDate={startDate}
+                endDate={endDate}
+                selectsRange
+                minDate={new Date()}
+                filterDate={(date) => !isDateBooked(date)}
+                placeholderText="Select your stay dates"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              />
             </div>
 
-            {token ? (
-              <button
-                onClick={() =>
-                  navigate("/booking-confirmation", {
-                    state: { venueId: venue.id, startDate, endDate },
-                  })
-                }
-                className="w-full bg-azure text-white py-3 rounded-md font-semibold hover:bg-[#226964] transition mb-3"
+            {/* GUESTS */}
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Guests
+              </label>
+              <select
+                value={guests}
+                onChange={(e) => setGuests(Number(e.target.value))}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
               >
-                Book now
-              </button>
+                {Array.from({ length: venue.maxGuests }, (_, i) => i + 1).map((g) => (
+                  <option key={g} value={g}>
+                    {g} {g === 1 ? "guest" : "guests"}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* BOOK BUTTON */}
+            {token ? (
+              isOwnerManager ? (
+                <p className="text-sm text-gray-500 italic">
+                  Managers cannot book their own venues.
+                </p>
+              ) : (
+                <button
+                  onClick={submitBooking}
+                  className="w-full bg-azure text-white py-3 rounded-md font-semibold hover:bg-[#226964] transition"
+                >
+                  Book now
+                </button>
+              )
             ) : (
               <p className="text-sm text-gray-600 mb-3">
                 You must{" "}
-                <Link
-                  to="/login"
-                  className="text-coral underline font-semibold"
-                >
+                <Link to="/login" className="text-coral underline font-semibold">
                   log in
                 </Link>{" "}
                 before booking.
@@ -418,7 +479,7 @@ export default function VenueDetail() {
             {isOwnerManager && (
               <button
                 onClick={() => navigate(`/edit/${venue.id}`)}
-                className="w-full border border-teal text-teal py-2 rounded-md text-sm font-semibold hover:bg-teal hover:text-white transition"
+                className="mt-3 w-full border border-teal text-teal py-2 rounded-md text-sm font-semibold hover:bg-teal hover:text-white transition"
               >
                 Edit venue
               </button>
@@ -433,88 +494,28 @@ export default function VenueDetail() {
           </aside>
         </div>
 
-        <div className="grid gap-10 md:grid-cols-[2fr,1.2fr]">
-          <section>
-            <h2 className="text-2xl font-serif font-semibold mb-3">
-              Description
-            </h2>
-            <p className="text-gray-700 leading-relaxed">
-              {venue.description ||
-                "No description provided for this venue yet."}
-            </p>
-
-            <h2 className="text-2xl font-serif font-semibold mt-10 mb-4">
-              Rules & policies
-            </h2>
-
-            <div className="grid grid-cols-2 text-sm text-gray-700 gap-y-2">
-              <p>• Check in 15:00</p>
-              <p>• Check out 11:00</p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-serif font-semibold mb-3">
-              Amenities
-            </h2>
-
-            <div className="flex flex-wrap gap-2">
-              {venue.meta?.wifi && (
-                <span className="px-3 py-1 bg-teal/5 text-teal text-sm rounded-full border border-teal/20">
-                  Wi-Fi
-                </span>
-              )}
-              {venue.meta?.parking && (
-                <span className="px-3 py-1 bg-teal/5 text-teal text-sm rounded-full border border-teal/20">
-                  Parking
-                </span>
-              )}
-              {venue.meta?.breakfast && (
-                <span className="px-3 py-1 bg-teal/5 text-teal text-sm rounded-full border border-teal/20">
-                  Breakfast
-                </span>
-              )}
-              {venue.meta?.pets && (
-                <span className="px-3 py-1 bg-teal/5 text-teal text-sm rounded-full border border-teal/20">
-                  Pets allowed
-                </span>
-              )}
-              {!venue.meta ||
-                (!venue.meta.wifi &&
-                  !venue.meta.parking &&
-                  !venue.meta.breakfast &&
-                  !venue.meta.pets && (
-                    <p className="text-gray-500 text-sm">
-                      Amenities information is not available.
-                    </p>
-                  ))}
-            </div>
-          </section>
-        </div>
-
-        <section className="py-16 text-center">
-          <h2 className="text-3xl font-serif font-bold mb-10">Reviews</h2>
+        {/* REVIEWS */}
+        <section className="py-12">
+          <h2 className="text-3xl font-serif font-bold mb-8 text-center">
+            Reviews
+          </h2>
 
           {!venue.reviews || venue.reviews.length === 0 ? (
-            <p className="text-gray-500 italic">
-              No reviews yet for this venue.
+            <p className="text-gray-500 italic text-center">
+              No reviews yet.
             </p>
           ) : (
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
               {venue.reviews.map((review) => (
                 <div
                   key={review.id}
-                  className="bg-white shadow-sm border border-gray-100 rounded-xl p-8"
+                  className="bg-white shadow-sm border border-gray-100 rounded-xl p-6"
                 >
-                  <p className="italic text-gray-600 mb-4">
+                  <p className="italic mb-3 text-gray-600">
                     "{review.description}"
                   </p>
-
-                  <p className="font-semibold text-teal mb-1">
-                    {review.user?.name || "Unknown guest"}
-                  </p>
-
-                  <p className="text-yellow-500 text-sm">
+                  <p className="font-semibold text-teal">{review.user?.name}</p>
+                  <p className="text-yellow-500">
                     {"⭐".repeat(review.rating)}
                   </p>
                 </div>

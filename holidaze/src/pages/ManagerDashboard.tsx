@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getUserBookings } from "../api/bookings";
 
 const API_BASE = "https://v2.api.noroff.dev";
 const API_KEY = import.meta.env.VITE_API_KEY;
