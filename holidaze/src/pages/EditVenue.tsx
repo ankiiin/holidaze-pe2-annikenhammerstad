@@ -1,4 +1,3 @@
-// src/pages/EditVenue.tsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -15,7 +14,6 @@ export default function EditVenue() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -29,7 +27,6 @@ export default function EditVenue() {
   const [pool, setPool] = useState(false);
   const [breakfast, setBreakfast] = useState(false);
 
-  // Fetch existing venue
   useEffect(() => {
     async function fetchVenue() {
       try {
@@ -43,7 +40,6 @@ export default function EditVenue() {
         const json = await res.json();
         const v = json.data;
 
-        // Prefill all fields
         setName(v.name);
         setDescription(v.description);
         setPrice(v.price);
