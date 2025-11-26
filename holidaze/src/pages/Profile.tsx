@@ -15,7 +15,6 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [showUpdatedMessage, setShowUpdatedMessage] = useState(false);
 
-  // Show "profile updated" toast
   useEffect(() => {
     if (location.state?.updated) {
       setShowUpdatedMessage(true);
@@ -24,7 +23,6 @@ export default function Profile() {
     }
   }, [location.state]);
 
-  // Fetch user bookings
   useEffect(() => {
     async function loadBookings() {
       if (!user || !token || !apiKey) return;
@@ -58,17 +56,14 @@ export default function Profile() {
 
   return (
     <section className="max-w-3xl mx-auto py-12 px-6">
-      {/* SUCCESS MESSAGE */}
       {showUpdatedMessage && (
         <div className="mb-6 w-full bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md text-sm">
           Profile updated successfully!
         </div>
       )}
 
-      {/* HEADER */}
       <h1 className="text-3xl font-serif font-bold mb-8">Your profile</h1>
 
-      {/* PROFILE INFO */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-12">
         <div className="w-32 h-32 rounded-full overflow-hidden border border-gray-200 shadow-sm">
           <img
@@ -91,7 +86,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* BOOKINGS SECTION */}
       <h2 className="text-xl font-serif font-semibold mb-4">Your bookings</h2>
 
       {loading ? (
