@@ -80,18 +80,15 @@ export default function VenueDetail() {
   const isOwnerManager =
     role === "manager" && user && venue && venue.owner?.name === user.name;
 
-  // Booking form state
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [guests, setGuests] = useState(1);
 
-  // Search box
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState<Venue[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Image modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -123,7 +120,6 @@ export default function VenueDetail() {
     loadVenue();
   }, [id]);
 
-  // Disable booked dates in datepicker
   const bookedRanges =
     venue?.bookings?.map((b) => ({
       start: new Date(b.dateFrom),
@@ -136,7 +132,6 @@ export default function VenueDetail() {
     );
   }
 
-  // SEARCH handling
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -168,7 +163,6 @@ export default function VenueDetail() {
     setShowDropdown(true);
   }
 
-  // IMAGE MODAL
   function openModal(idx: number) {
     setActiveImageIndex(idx);
     setIsModalOpen(true);
@@ -192,7 +186,6 @@ export default function VenueDetail() {
     );
   }
 
-  // *** BOOKING REQUEST ***
   async function submitBooking() {
     if (!token) {
       navigate("/login");
@@ -237,7 +230,6 @@ export default function VenueDetail() {
     }
   }
 
-  // LOADING / ERROR
   if (loading) {
     return (
       <section className="animate-pulse space-y-6">
@@ -261,10 +253,8 @@ export default function VenueDetail() {
     ? venue.media
     : [{ url: "/images/placeholder.jpg", alt: venue.name }];
 
-  // RENDER
   return (
     <>
-      {/* IMAGE MODAL */}
       {isModalOpen && (
         <div
           className="fixed inset-0 bg-black/80 z-40 flex items-center justify-center"
@@ -302,9 +292,7 @@ export default function VenueDetail() {
         </div>
       )}
 
-      {/* MAIN CONTENT */}
       <section className="space-y-10">
-        {/* SEARCH BAR */}
         <div className="relative max-w-sm" ref={dropdownRef}>
           <input
             type="text"
@@ -343,7 +331,6 @@ export default function VenueDetail() {
           )}
         </div>
 
-        {/* IMAGE SECTION */}
         <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
           <div
             className="rounded-xl overflow-hidden cursor-pointer"
@@ -373,7 +360,6 @@ export default function VenueDetail() {
           </div>
         </div>
 
-        {/* DETAILS */}
         <div className="grid gap-8 md:grid-cols-[2fr,1.3fr]">
           <div>
             <h1 className="text-3xl font-serif font-bold mb-3">
@@ -402,13 +388,11 @@ export default function VenueDetail() {
             </p>
           </div>
 
-          {/* BOOKING SIDEBAR */}
           <aside className="border border-gray-200 rounded-xl p-6 shadow-sm bg-white h-fit">
             <h2 className="text-xl font-serif font-semibold mb-4">
               Your stay
             </h2>
 
-            {/* DATE PICKER */}
             <div className="space-y-3 mb-4">
               <label className="block text-xs font-semibold text-gray-500">
                 Dates
@@ -434,7 +418,6 @@ export default function VenueDetail() {
               />
             </div>
 
-            {/* GUESTS */}
             <div className="mb-4">
               <label className="block text-xs font-semibold text-gray-500 mb-1">
                 Guests
@@ -452,7 +435,6 @@ export default function VenueDetail() {
               </select>
             </div>
 
-            {/* BOOK BUTTON */}
             {token ? (
               isOwnerManager ? (
                 <p className="text-sm text-gray-500 italic">
@@ -494,7 +476,6 @@ export default function VenueDetail() {
           </aside>
         </div>
 
-        {/* REVIEWS */}
         <section className="py-12">
           <h2 className="text-3xl font-serif font-bold mb-8 text-center">
             Reviews
