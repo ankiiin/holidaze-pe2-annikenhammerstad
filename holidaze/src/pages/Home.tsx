@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getFeaturedVenues, getVenueReviews } from "../api/listings";
 import PromoBanner from "../components/PromoBanner";
 
 export default function Home() {
   const [venues, setVenues] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchData() {
@@ -21,6 +24,10 @@ export default function Home() {
     fetchData();
   }, []);
 
+  function handleExploreClick() {
+    navigate("/venues");
+  }
+
   return (
     <main className="flex flex-col min-h-screen">
       <section
@@ -30,6 +37,7 @@ export default function Home() {
         }}
       >
         <div className="absolute inset-0 bg-black/40"></div>
+
         <div className="relative z-10 max-w-2xl px-4">
           <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">
             Find your next escape
@@ -37,18 +45,24 @@ export default function Home() {
           <p className="text-lg mb-8 font-light">
             Unique stays, cozy cabins and city getaways across the world.
           </p>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <input
               type="text"
               placeholder="Search destinations..."
-              className="px-4 py-3 w-64 sm:w-80 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-coral text-gray-700"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="px-4 py-3 w-64 sm:w-80 rounded-lg border border-gray-300 
+                         focus:outline-none focus:ring-2 focus:ring-coral text-gray-700"
             />
-            <Link
-              to="/explore"
-              className="bg-coral text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#e15e52] transition"
+
+            <button
+              onClick={handleExploreClick}
+              className="bg-coral text-white font-semibold px-6 py-3 rounded-lg 
+                         hover:bg-[#e15e52] transition"
             >
               Explore stays
-            </Link>
+            </button>
           </div>
 
           <p className="mt-4 text-sm text-gray-200 opacity-90">
@@ -56,6 +70,7 @@ export default function Home() {
           </p>
         </div>
       </section>
+
       <section className="py-16 px-6 md:px-12 bg-white text-center">
         <h2 className="text-3xl font-serif font-bold mb-2">Featured stays</h2>
         <p className="text-gray-600 mb-12">
@@ -81,6 +96,7 @@ export default function Home() {
                 <p className="text-coral font-medium mb-3">
                   ${venue.price} per night
                 </p>
+
                 <Link
                   to={`/venue/${venue.id}`}
                   className="bg-azure text-white px-4 py-2 rounded-lg hover:bg-teal transition text-sm"
@@ -92,13 +108,17 @@ export default function Home() {
           ))}
         </div>
       </section>
+
       <PromoBanner />
+
       {reviews.length > 0 && (
         <section className="py-16 px-6 md:px-12 bg-gray-50 text-center">
           <h2 className="text-3xl font-serif font-bold mb-8">
             What our guests say
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 
+                          gap-8 max-w-6xl mx-auto"
+          >
             {reviews.slice(0, 3).map((review, index) => (
               <div
                 key={index}
