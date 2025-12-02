@@ -91,7 +91,9 @@ export default function Profile() {
       {loading ? (
         <p className="text-gray-500 text-sm">Loading your bookings…</p>
       ) : bookings.length === 0 ? (
-        <p className="text-gray-600 text-sm italic">You have no bookings yet.</p>
+        <p className="text-gray-600 text-sm italic">
+          You have no bookings yet.
+        </p>
       ) : (
         <div className="space-y-4">
           {bookings.map((booking) => (
@@ -118,8 +120,7 @@ export default function Profile() {
               </p>
 
               <p className="text-sm text-gray-700">
-                <span className="font-semibold">Guests:</span>{" "}
-                {booking.guests}
+                <span className="font-semibold">Guests:</span> {booking.guests}
               </p>
             </div>
           ))}

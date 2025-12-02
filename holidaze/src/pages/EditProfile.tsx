@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -44,16 +45,16 @@ export default function EditProfile() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(
-          data.errors?.[0]?.message || "Could not update profile"
-        );
+        toast.error("Could not update profile. Please try again.");
+        return;
       }
 
       localStorage.setItem("user", JSON.stringify(data.data));
 
+      toast.success("Profile updated successfully!");
       navigate("/profile", { state: { updated: true } });
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch {
+      toast.error("Something went wrong. Please try again.");
     }
   }
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -37,7 +38,7 @@ export default function Login() {
 
       if (!response.ok) {
         setLoading(false);
-        setErrorMsg(data.message || "Login failed");
+        toast.error(data.message || "Login failed");
         return;
       }
 
@@ -46,6 +47,8 @@ export default function Login() {
       localStorage.setItem("role", role);
 
       window.dispatchEvent(new Event("storage"));
+
+      toast.success("Logged in successfully!");
 
       navigate("/profile");
 
@@ -58,7 +61,7 @@ export default function Login() {
       }
     } catch (error) {
       setLoading(false);
-      setErrorMsg("Something went wrong.");
+      toast.error("Something went wrong.");
     }
   }
 
@@ -68,12 +71,6 @@ export default function Login() {
         <h1 className="text-4xl font-serif font-bold text-center mb-8">
           Welcome back
         </h1>
-
-        {errorMsg && (
-          <p className="bg-red-100 text-red-600 p-3 rounded text-sm mb-4">
-            {errorMsg}
-          </p>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

@@ -7,7 +7,7 @@ export default function BookingConfirmation() {
 
   const booking = location.state;
 
-  const role = localStorage.getItem("role"); 
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     if (!booking) {
@@ -38,12 +38,16 @@ export default function BookingConfirmation() {
   return (
     <section className="max-w-lg mx-auto py-16 px-6 text-center">
       <div className="bg-green-50 border border-green-200 text-green-700 p-6 rounded-2xl shadow-sm mb-8">
-        <h1 className="text-3xl font-serif font-bold mb-2">Booking confirmed!</h1>
+        <h1 className="text-3xl font-serif font-bold mb-2">
+          Booking confirmed!
+        </h1>
         <p className="text-sm">Your stay has been successfully booked.</p>
       </div>
 
       <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-6 mb-10">
-        <h2 className="text-xl font-serif font-semibold mb-4">Your booking details</h2>
+        <h2 className="text-xl font-serif font-semibold mb-4">
+          Your booking details
+        </h2>
 
         <div className="text-left space-y-3">
           <p>

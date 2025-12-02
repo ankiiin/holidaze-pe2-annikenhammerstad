@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import toast from "react-hot-toast";
 
 const API_BASE = "https://v2.api.noroff.dev";
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -111,7 +112,8 @@ export default function VenueDetail() {
         const json = await res.json();
         setVenue(json.data as Venue);
       } catch {
-        setError("Could not load this venue.");
+        toast.error("Could not load this venue.");
+        setError("COuld not load this venue.");
       } finally {
         setLoading(false);
       }
@@ -134,7 +136,10 @@ export default function VenueDetail() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setShowDropdown(false);
       }
     }
@@ -188,12 +193,13 @@ export default function VenueDetail() {
 
   async function submitBooking() {
     if (!token) {
+      toast.error("You need to log in before booking.");
       navigate("/login");
       return;
     }
 
     if (!startDate || !endDate) {
-      alert("Please select valid dates.");
+      toast.error("Please select valid dates.");
       return;
     }
 
@@ -226,7 +232,7 @@ export default function VenueDetail() {
         },
       });
     } catch (err) {
-      alert("Could not complete booking. Please try again.");
+      toast.error("Could not complete booking. Please try again.");
     }
   }
 
@@ -362,9 +368,7 @@ export default function VenueDetail() {
 
         <div className="grid gap-8 md:grid-cols-[2fr,1.3fr]">
           <div>
-            <h1 className="text-3xl font-serif font-bold mb-3">
-              {venue.name}
-            </h1>
+            <h1 className="text-3xl font-serif font-bold mb-3">{venue.name}</h1>
 
             <p className="text-gray-600 mb-4">
               📍 {venue.location?.city || "Unknown"},{" "}
@@ -376,8 +380,7 @@ export default function VenueDetail() {
             </p>
 
             <p className="text-gray-500 text-sm mb-6">
-              Max {venue.maxGuests}{" "}
-              {venue.maxGuests === 1 ? "guest" : "guests"}
+              Max {venue.maxGuests} {venue.maxGuests === 1 ? "guest" : "guests"}
             </p>
 
             <h2 className="text-xl font-serif font-semibold mb-2">
@@ -389,9 +392,7 @@ export default function VenueDetail() {
           </div>
 
           <aside className="border border-gray-200 rounded-xl p-6 shadow-sm bg-white h-fit">
-            <h2 className="text-xl font-serif font-semibold mb-4">
-              Your stay
-            </h2>
+            <h2 className="text-xl font-serif font-semibold mb-4">Your stay</h2>
 
             <div className="space-y-3 mb-4">
               <label className="block text-xs font-semibold text-gray-500">
@@ -427,11 +428,13 @@ export default function VenueDetail() {
                 onChange={(e) => setGuests(Number(e.target.value))}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
               >
-                {Array.from({ length: venue.maxGuests }, (_, i) => i + 1).map((g) => (
-                  <option key={g} value={g}>
-                    {g} {g === 1 ? "guest" : "guests"}
-                  </option>
-                ))}
+                {Array.from({ length: venue.maxGuests }, (_, i) => i + 1).map(
+                  (g) => (
+                    <option key={g} value={g}>
+                      {g} {g === 1 ? "guest" : "guests"}
+                    </option>
+                  )
+                )}
               </select>
             </div>
 
@@ -451,7 +454,10 @@ export default function VenueDetail() {
             ) : (
               <p className="text-sm text-gray-600 mb-3">
                 You must{" "}
-                <Link to="/login" className="text-coral underline font-semibold">
+                <Link
+                  to="/login"
+                  className="text-coral underline font-semibold"
+                >
                   log in
                 </Link>{" "}
                 before booking.
@@ -482,9 +488,7 @@ export default function VenueDetail() {
           </h2>
 
           {!venue.reviews || venue.reviews.length === 0 ? (
-            <p className="text-gray-500 italic text-center">
-              No reviews yet.
-            </p>
+            <p className="text-gray-500 italic text-center">No reviews yet.</p>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
               {venue.reviews.map((review) => (

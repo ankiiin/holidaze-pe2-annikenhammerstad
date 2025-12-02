@@ -116,7 +116,8 @@ export default function Home() {
           <h2 className="text-3xl font-serif font-bold mb-8">
             What our guests say
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 
                           gap-8 max-w-6xl mx-auto"
           >
             {reviews.slice(0, 3).map((review, index) => (

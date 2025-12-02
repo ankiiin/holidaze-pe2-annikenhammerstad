@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const API_BASE = "https://v2.api.noroff.dev";
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -69,12 +70,14 @@ export default function CreateVenue() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.errors?.[0]?.message || "Could not create venue.");
+        toast.error("Failed to create venue. Please try again.");
+        return;
       }
 
+      toast.success("Venue created successfully!");
       navigate(`/manager`);
-    } catch (err: any) {
-      setError(err.message);
+    } catch {
+      toast.error("Something went wrong. Please try again.");
     }
   }
 
@@ -84,9 +87,10 @@ export default function CreateVenue() {
         Create new venue
       </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-2xl shadow-sm border">
-        
-        {/* NAME */}
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-white p-6 rounded-2xl shadow-sm border"
+      >
         <div>
           <label className="block text-sm font-semibold mb-1">Name</label>
           <input
@@ -98,9 +102,10 @@ export default function CreateVenue() {
           />
         </div>
 
-        {/* DESCRIPTION */}
         <div>
-          <label className="block text-sm font-semibold mb-1">Description</label>
+          <label className="block text-sm font-semibold mb-1">
+            Description
+          </label>
           <textarea
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-28"
             placeholder="Write a short description..."
@@ -109,9 +114,10 @@ export default function CreateVenue() {
           />
         </div>
 
-        {/* MEDIA */}
         <div>
-          <label className="block text-sm font-semibold mb-1">Media (image URL)</label>
+          <label className="block text-sm font-semibold mb-1">
+            Media (image URL)
+          </label>
           <input
             type="url"
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
@@ -121,7 +127,6 @@ export default function CreateVenue() {
           />
         </div>
 
-        {/* PRICE + GUESTS */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold mb-1">
@@ -138,7 +143,9 @@ export default function CreateVenue() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-1">Max guests</label>
+            <label className="block text-sm font-semibold mb-1">
+              Max guests
+            </label>
             <input
               type="number"
               min="1"
@@ -150,7 +157,6 @@ export default function CreateVenue() {
           </div>
         </div>
 
-        {/* LOCATION */}
         <div>
           <label className="block text-sm font-semibold mb-1">Location</label>
           <input
@@ -162,29 +168,43 @@ export default function CreateVenue() {
           />
         </div>
 
-        {/* AMENITIES */}
         <div className="flex gap-4 text-sm">
           <label className="flex items-center gap-1">
-            <input type="checkbox" checked={wifi} onChange={() => setWifi(!wifi)} />
+            <input
+              type="checkbox"
+              checked={wifi}
+              onChange={() => setWifi(!wifi)}
+            />
             Wifi
           </label>
           <label className="flex items-center gap-1">
-            <input type="checkbox" checked={parking} onChange={() => setParking(!parking)} />
+            <input
+              type="checkbox"
+              checked={parking}
+              onChange={() => setParking(!parking)}
+            />
             Parking
           </label>
           <label className="flex items-center gap-1">
-            <input type="checkbox" checked={pool} onChange={() => setPool(!pool)} />
+            <input
+              type="checkbox"
+              checked={pool}
+              onChange={() => setPool(!pool)}
+            />
             Pool
           </label>
           <label className="flex items-center gap-1">
-            <input type="checkbox" checked={breakfast} onChange={() => setBreakfast(!breakfast)} />
+            <input
+              type="checkbox"
+              checked={breakfast}
+              onChange={() => setBreakfast(!breakfast)}
+            />
             Breakfast
           </label>
         </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
-        {/* BUTTONS */}
         <div className="flex justify-between mt-6">
           <button
             type="submit"
@@ -201,7 +221,6 @@ export default function CreateVenue() {
             Cancel
           </button>
         </div>
-
       </form>
     </section>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const API_BASE = "https://v2.api.noroff.dev";
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -87,11 +88,13 @@ export default function EditVenue() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.errors?.[0]?.message || "Failed to update venue");
+      if (!res.ok)
+        throw new Error(data.errors?.[0]?.message || "Failed to update venue");
 
-      navigate(`/venue/${id}`, { state: { updated: true } });
+      toast.success("Venue updated successfully!");
+      navigate(`/venues/${id}`);
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message || "Failed to update venue");
     }
   }
 
@@ -101,14 +104,7 @@ export default function EditVenue() {
     <section className="max-w-xl mx-auto py-12 px-6">
       <h1 className="text-3xl font-serif font-bold mb-6">Edit venue</h1>
 
-      {error && (
-        <div className="bg-red-100 text-red-800 border border-red-300 px-4 py-2 mb-4 rounded">
-          {error}
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-6">
-
         <div>
           <label className="block text-sm font-semibold mb-1">Name</label>
           <input
@@ -120,7 +116,9 @@ export default function EditVenue() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Description</label>
+          <label className="block text-sm font-semibold mb-1">
+            Description
+          </label>
           <textarea
             className="w-full border rounded px-3 py-2 h-28"
             value={description}
@@ -131,7 +129,9 @@ export default function EditVenue() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold mb-1">Price per night</label>
+            <label className="block text-sm font-semibold mb-1">
+              Price per night
+            </label>
             <input
               type="number"
               className="w-full border rounded px-3 py-2"
@@ -142,7 +142,9 @@ export default function EditVenue() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-1">Max guests</label>
+            <label className="block text-sm font-semibold mb-1">
+              Max guests
+            </label>
             <input
               type="number"
               className="w-full border rounded px-3 py-2"
@@ -185,19 +187,35 @@ export default function EditVenue() {
         <fieldset className="space-y-2">
           <legend className="font-semibold mb-2">Amenities</legend>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={wifi} onChange={(e) => setWifi(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={wifi}
+              onChange={(e) => setWifi(e.target.checked)}
+            />
             Wifi
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={parking} onChange={(e) => setParking(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={parking}
+              onChange={(e) => setParking(e.target.checked)}
+            />
             Parking
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={pool} onChange={(e) => setPool(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={pool}
+              onChange={(e) => setPool(e.target.checked)}
+            />
             Pool
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={breakfast} onChange={(e) => setBreakfast(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={breakfast}
+              onChange={(e) => setBreakfast(e.target.checked)}
+            />
             Breakfast
           </label>
         </fieldset>

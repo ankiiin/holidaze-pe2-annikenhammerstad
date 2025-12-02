@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Venue } from "../types/venue";
 import DatePicker from "react-datepicker";
+import toast from "react-hot-toast";
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -41,6 +42,7 @@ export default function VenuesList() {
       setVenues(data.data || []);
     } catch (error) {
       console.error(error);
+      toast.error("COuld not load venues. Please try again.");
       setErrorMsg("Could not load venues. Please try again.");
     } finally {
       setLoading(false);
@@ -49,7 +51,11 @@ export default function VenuesList() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    fetchVenues(searchTerm.trim() || undefined);
+    if (!searchTerm.trim()) {
+      toast.error("Please enter a search term.");
+      return;
+    }
+    fetchVenues(searchTerm.trim());
   }
 
   const guestsNumber = Number(guests) || 1;

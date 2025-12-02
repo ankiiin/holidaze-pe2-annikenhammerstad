@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -36,7 +37,8 @@ export default function Register() {
     setSuccess(false);
 
     if (!validateEmail(form.email)) {
-      return setErrorMsg("Email must be @stud.noroff.no or @noroff.no");
+      toast.error("Email must end with @stud.noroff.no or @noroff.no");
+      return;
     }
 
     setLoading(true);
@@ -52,7 +54,9 @@ export default function Register() {
 
       if (!registerRes.ok) {
         setLoading(false);
-        return setErrorMsg(registerData?.errors?.[0]?.message || "Registration failed");
+        toast.error(
+          registerData?.errors?.[0]?.message || "Registration failed"
+        );
       }
 
       const loginRes = await fetch(`${API_BASE}/auth/login`, {
@@ -68,19 +72,19 @@ export default function Register() {
 
       if (!loginRes.ok) {
         setLoading(false);
-        return setErrorMsg(loginData?.errors?.[0]?.message || "Login failed after registration");
+        toast.error(loginData?.errors?.[0]?.message || "Login failed");
       }
 
       localStorage.setItem("accessToken", loginData.data.accessToken);
       localStorage.setItem("user", JSON.stringify(loginData.data));
 
-      setSuccess(true);
+      toast.success("Registration successful!");
       setLoading(false);
 
       navigate("/profile");
     } catch (error) {
       setLoading(false);
-      setErrorMsg("Something went wrong.");
+      toast.error("Something went wrong. Please try again.");
     }
   }
 
@@ -90,18 +94,6 @@ export default function Register() {
         <h1 className="text-4xl font-serif font-bold text-center mb-8">
           Create an account
         </h1>
-
-        {errorMsg && (
-          <p className="bg-red-100 text-red-600 p-3 rounded text-sm mb-4">
-            {errorMsg}
-          </p>
-        )}
-
-        {success && (
-          <p className="bg-green-100 text-green-700 p-3 rounded text-sm mb-4">
-            Registration successful! Logging you in…
-          </p>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
