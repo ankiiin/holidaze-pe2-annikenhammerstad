@@ -63,15 +63,12 @@ export default function ManagerDashboard() {
               "X-Noroff-API-Key": API_KEY,
             },
           }),
-          fetch(
-            `${API_BASE}/holidaze/profiles/${user.name}/bookings?_venue=true`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "X-Noroff-API-Key": API_KEY,
-              },
-            }
-          ),
+          fetch(`${API_BASE}/holidaze/profiles/${user.name}/bookings?_venue=true`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "X-Noroff-API-Key": API_KEY,
+            },
+          }),
         ]);
 
         if (!venueRes.ok || !bookingRes.ok) {
@@ -95,14 +92,12 @@ export default function ManagerDashboard() {
     }
 
     fetchDashboard();
-  }, [navigate]);
+  }, [navigate]); 
 
   async function handleDeleteVenue(id: string) {
     const token = localStorage.getItem("token");
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this venue?"
-    );
+    const confirmed = window.confirm("Are you sure you want to delete this venue?");
     if (!confirmed) return;
 
     try {
@@ -143,6 +138,7 @@ export default function ManagerDashboard() {
 
   return (
     <section className="max-w-6xl mx-auto py-12 px-6">
+
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
         <div className="flex items-center gap-6">
           <div className="w-28 h-28 rounded-full overflow-hidden border shadow-sm">
@@ -172,10 +168,9 @@ export default function ManagerDashboard() {
       </h1>
 
       <div className="grid md:grid-cols-2 gap-8">
+
         <div className="bg-white shadow-sm border rounded-2xl p-6">
-          <h2 className="text-2xl font-serif font-semibold mb-4">
-            Upcoming bookings
-          </h2>
+          <h2 className="text-2xl font-serif font-semibold mb-4">Upcoming bookings</h2>
 
           {loading ? (
             <p className="text-gray-500 text-sm">Loading…</p>
@@ -196,10 +191,7 @@ export default function ManagerDashboard() {
                   <tr key={b.id} className="border-b last:border-none">
                     <td className="py-3">{b.guests} guests</td>
                     <td className="py-3">
-                      <Link
-                        to={`/venue/${b.venue.id}`}
-                        className="text-teal hover:text-coral font-semibold"
-                      >
+                      <Link to={`/venue/${b.venue.id}`} className="text-teal hover:text-coral font-semibold">
                         {b.venue.name}
                       </Link>
                       <p className="text-xs text-gray-500">
@@ -209,9 +201,7 @@ export default function ManagerDashboard() {
                     <td className="py-3">
                       {formatDate(b.dateFrom)} – {formatDate(b.dateTo)}
                     </td>
-                    <td className="py-3 text-green-600 text-xs font-semibold">
-                      Confirmed
-                    </td>
+                    <td className="py-3 text-green-600 text-xs font-semibold">Confirmed</td>
                   </tr>
                 ))}
               </tbody>
@@ -227,9 +217,7 @@ export default function ManagerDashboard() {
           ) : venues.length === 0 ? (
             <p className="text-sm text-gray-500">
               No venues yet.{" "}
-              <Link to="/create" className="text-coral underline">
-                Create one
-              </Link>
+              <Link to="/create" className="text-coral underline">Create one</Link>
             </p>
           ) : (
             <div className="space-y-4">
@@ -237,19 +225,9 @@ export default function ManagerDashboard() {
                 const img = venue.media?.[0]?.url || "/images/placeholder.jpg";
 
                 return (
-                  <div
-                    key={venue.id}
-                    className="flex gap-4 border-b pb-4 last:border-none"
-                  >
-                    <Link
-                      to={`/venue/${venue.id}`}
-                      className="w-20 h-16 rounded-lg overflow-hidden"
-                    >
-                      <img
-                        src={img}
-                        alt={venue.name}
-                        className="w-full h-full object-cover"
-                      />
+                  <div key={venue.id} className="flex gap-4 border-b pb-4 last:border-none">
+                    <Link to={`/venue/${venue.id}`} className="w-20 h-16 rounded-lg overflow-hidden">
+                      <img src={img} alt={venue.name} className="w-full h-full object-cover" />
                     </Link>
 
                     <div className="flex-1">
@@ -260,17 +238,11 @@ export default function ManagerDashboard() {
                         {venue.name}
                       </Link>
                       <p className="text-xs text-gray-500">
-                        {venue.location?.city || "Unknown"},{" "}
-                        {venue.location?.country || ""}
+                        {venue.location?.city || "Unknown"}, {venue.location?.country || ""}
                       </p>
 
                       <div className="mt-2 flex gap-3 text-xs text-teal font-semibold">
-                        <Link
-                          to={`/edit/${venue.id}`}
-                          className="hover:underline"
-                        >
-                          Edit
-                        </Link>
+                        <Link to={`/edit/${venue.id}`} className="hover:underline">Edit</Link>
                         <button
                           onClick={() => handleDeleteVenue(venue.id)}
                           disabled={deletingId === venue.id}
@@ -286,6 +258,7 @@ export default function ManagerDashboard() {
             </div>
           )}
         </div>
+
       </div>
     </section>
   );
