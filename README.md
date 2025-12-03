@@ -106,7 +106,7 @@ booking.ts
 user.ts
 venue.ts
 App.tsx
-main.tsx```
+main.tsx
 
 ## Installation
 
