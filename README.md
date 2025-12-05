@@ -106,7 +106,8 @@ booking.ts
 user.ts
 venue.ts
 App.tsx
-main.tsx```
+main.tsx
+```
 
 ## Installation
 
@@ -126,9 +127,9 @@ This project has been one of the most comprehensive and rewarding ones I have wo
 Holidaze is a project I am proud to end my studies with.
 
 ## Links
-Live site: https://holidaze-pe2-annikenhammerstad.netlify.app/
-GitHub repository: https://github.com/ankiiin/holidaze-pe2-annikenhammerstad
-Figma design: https://www.figma.com/design/iLbdSvmAijYDO6fbNYW96Y/Holidaze-PE2?node-id=0-1&t=ZuOVr9E5ouhjCxcV-1
+- Live site: https://holidaze-pe2-annikenhammerstad.netlify.app/
+- GitHub repository: https://github.com/ankiiin/holidaze-pe2-annikenhammerstad
+- Figma design: https://www.figma.com/design/iLbdSvmAijYDO6fbNYW96Y/Holidaze-PE2?node-id=0-1&t=ZuOVr9E5ouhjCxcV-1
 
 ## Created by
 **Anniken Olsen Hammerstad**
