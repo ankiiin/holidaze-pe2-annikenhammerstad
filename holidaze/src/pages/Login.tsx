@@ -44,7 +44,9 @@ export default function Login() {
 
       localStorage.setItem("token", data.data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.data));
-      localStorage.setItem("role", role);
+      
+      const actualRole = data.data.venueManager ? "manager" : "customer";
+      localStorage.setItem("role", actualRole);
 
       window.dispatchEvent(new Event("storage"));
 
@@ -54,7 +56,7 @@ export default function Login() {
 
       setLoading(false);
 
-      if (role === "manager") {
+      if (actualRole === "manager") {
         navigate("/manager");
       } else {
         navigate("/profile");

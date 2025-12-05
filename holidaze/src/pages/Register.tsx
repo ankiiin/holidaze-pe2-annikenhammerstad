@@ -75,10 +75,17 @@ export default function Register() {
         toast.error(loginData?.errors?.[0]?.message || "Login failed");
       }
 
-      localStorage.setItem("accessToken", loginData.data.accessToken);
+      localStorage.clear();
+      localStorage.setItem("token", loginData.data.accessToken);
       localStorage.setItem("user", JSON.stringify(loginData.data));
+      localStorage.setItem("role", form.venueManager ? "manager" : "customer");
+
+      window.dispatchEvent(new Event("storage"));
 
       toast.success("Registration successful!");
+      setLoading(false);
+
+      setSuccess(true);
       setLoading(false);
 
       navigate("/profile");

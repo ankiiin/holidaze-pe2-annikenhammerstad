@@ -25,22 +25,22 @@ export default function EditProfile() {
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE}/holidaze/profiles/${user.name}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "X-Noroff-API-Key": apiKey,
-        },
-        body: JSON.stringify({
-          name,
-          avatar: {
-            url: avatarUrl,
-            alt: avatarAlt,
-          },
-          venueManager: true,
-        }),
-      });
+        const res = await fetch(`${API_BASE}/holidaze/profiles/${user.name}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              "X-Noroff-API-Key": apiKey,
+            },
+            body: JSON.stringify({
+              name,  
+              avatar: {
+                url: avatarUrl,
+                alt: avatarAlt,
+              },
+              venueManager: user.venueManager 
+            }),
+          });
 
       const data = await res.json();
 
