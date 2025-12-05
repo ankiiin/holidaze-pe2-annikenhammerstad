@@ -41,7 +41,6 @@ export default function VenuesList() {
       const data = await res.json();
       setVenues(data.data || []);
     } catch (error) {
-      console.error(error);
       toast.error("COuld not load venues. Please try again.");
       setErrorMsg("Could not load venues. Please try again.");
     } finally {
