@@ -73,7 +73,6 @@ function Navbar() {
             Explore
           </NavLink>
 
-          {/* Logged-out view */}
           {!isLoggedIn && (
             <>
               <NavLink

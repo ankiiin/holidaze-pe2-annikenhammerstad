@@ -8,8 +8,8 @@ export default function Profile() {
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
 
-  const token = localStorage.getItem("token");
-  const apiKey = import.meta.env.VITE_API_KEY;
+  const token = localStorage.getItem("token") || "";
+  const apiKey = import.meta.env.VITE_API_KEY || "";
 
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,9 +24,12 @@ export default function Profile() {
   }, [location.state]);
 
   useEffect(() => {
-    async function loadBookings() {
-      if (!user || !token || !apiKey) return;
+    if (!user?.name || !token || !apiKey) {
+      setLoading(false);
+      return;
+    }
 
+    async function load() {
       try {
         const data = await getUserBookings(user.name, token, apiKey);
         setBookings(data);
@@ -37,8 +40,8 @@ export default function Profile() {
       }
     }
 
-    loadBookings();
-  }, [user, token, apiKey]);
+    load();
+  }, []); 
 
   if (!user) {
     return (

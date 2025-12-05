@@ -49,7 +49,10 @@ export default function EditProfile() {
         return;
       }
 
-      localStorage.setItem("user", JSON.stringify(data.data));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ ...user, avatar: data.data.avatar })
+      );
 
       toast.success("Profile updated successfully!");
       navigate("/profile", { state: { updated: true } });

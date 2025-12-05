@@ -14,7 +14,6 @@ export default function Login() {
 
   const [role, setRole] = useState<"customer" | "manager">("customer");
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -24,7 +23,6 @@ export default function Login() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErrorMsg("");
     setLoading(true);
 
     try {
@@ -42,26 +40,38 @@ export default function Login() {
         return;
       }
 
+      // --- DEBUGGING ---
+      console.log("API returned venueManager:", data.data.venueManager);
+      console.log("Role selected in UI:", role);
+
+      // SAFELY DETECT ROLE
+      let actualRole: "customer" | "manager" = "customer";
+
+      if (data.data.venueManager === true) {
+        actualRole = "manager";
+      } else if (data.data.venueManager === false) {
+        actualRole = "customer";
+      } else {
+        // API DID NOT SEND venueManager → fallback to user selection
+        actualRole = role;
+      }
+
+      console.log("Role we will store:", actualRole);
+
+      // Store user session
       localStorage.setItem("token", data.data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.data));
-      
-      const actualRole = data.data.venueManager ? "manager" : "customer";
       localStorage.setItem("role", actualRole);
 
       window.dispatchEvent(new Event("storage"));
-
       toast.success("Logged in successfully!");
 
-      navigate("/profile");
+      // CLEAN, SINGLE NAVIGATION
+      navigate(actualRole === "manager" ? "/manager" : "/profile");
 
       setLoading(false);
-
-      if (actualRole === "manager") {
-        navigate("/manager");
-      } else {
-        navigate("/profile");
-      }
     } catch (error) {
+      console.error(error);
       setLoading(false);
       toast.error("Something went wrong.");
     }
