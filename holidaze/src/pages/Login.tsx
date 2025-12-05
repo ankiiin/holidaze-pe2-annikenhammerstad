@@ -40,11 +40,7 @@ export default function Login() {
         return;
       }
 
-      // --- DEBUGGING ---
-      console.log("API returned venueManager:", data.data.venueManager);
-      console.log("Role selected in UI:", role);
 
-      // SAFELY DETECT ROLE
       let actualRole: "customer" | "manager" = "customer";
 
       if (data.data.venueManager === true) {
@@ -52,13 +48,10 @@ export default function Login() {
       } else if (data.data.venueManager === false) {
         actualRole = "customer";
       } else {
-        // API DID NOT SEND venueManager → fallback to user selection
         actualRole = role;
       }
 
-      console.log("Role we will store:", actualRole);
 
-      // Store user session
       localStorage.setItem("token", data.data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.data));
       localStorage.setItem("role", actualRole);
@@ -66,7 +59,6 @@ export default function Login() {
       window.dispatchEvent(new Event("storage"));
       toast.success("Logged in successfully!");
 
-      // CLEAN, SINGLE NAVIGATION
       navigate(actualRole === "manager" ? "/manager" : "/profile");
 
       setLoading(false);

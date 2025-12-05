@@ -24,7 +24,6 @@ export async function getVenueReviews(id: string) {
     }
 
     const data = await response.json();
-    console.log("Fetched venue data:", data);
 
     const reviews = data.data?.reviews || [];
     if (reviews.length === 0) {
