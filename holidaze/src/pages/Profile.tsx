@@ -102,7 +102,7 @@ export default function Profile() {
               className="border border-gray-200 rounded-lg p-4 shadow-sm bg-white"
             >
               <Link
-                to={`/venues/${booking.venue.id}`}
+                to={`/venue/${booking.venue.id}`}
                 className="font-semibold text-teal hover:text-coral"
               >
                 {booking.venue.name}
